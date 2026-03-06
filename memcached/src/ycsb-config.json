@@ -1,0 +1,10 @@
+{
+  "workloada-recordcount": 34000000,
+  "workloadb-recordcount": 34000000,
+  "workloadc-recordcount": 34000000,
+  "workloada-operationcount": 110000000,
+  "workloadb-operationcount": 110000000,
+  "workloadc-operationcount": 110000000,
+  "threadcount": 24,
+  "memcached-host": "127.0.0.1"
+}
