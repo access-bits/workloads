@@ -24,7 +24,7 @@ RUN mvn -pl site.ycsb:memcached-binding -am clean package -DskipTests
 WORKDIR /YCSB
 
 # Copy benchmark scripts and config
-COPY src/yscb-config.json /YCSB/config.json
-COPY src/load.sh /YCSB/load.sh
-COPY src/run.sh /YCSB/run.sh
+COPY ./src/ycsb-config.json /YCSB/ycsb-config.json
+COPY ./src/load.sh /YCSB/load.sh
+COPY ./src/run.sh /YCSB/run.sh
 RUN chmod +x /YCSB/load.sh /YCSB/run.sh
