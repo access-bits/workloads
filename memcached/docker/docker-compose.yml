@@ -1,0 +1,20 @@
+services:
+  memcached:
+    image: memcached:latest
+    container_name: memcached
+    network_mode: host
+    command: -m ${MEMORY} -p ${PORT} -t ${THREADS}
+    cpuset: ${MEMCACHED_CPUS}
+    restart: unless-stopped
+
+  ycsb:
+    image: akrishnaams/access-bit-ycsb-memcached:latest
+    container_name: ycsb
+    network_mode: host
+    command: sleep infinity
+    cpuset: ${YCSB_CPUS}
+    volumes:
+      - ${CONFIG_FILE}:/YCSB/ycsb-config.json
+    depends_on:
+      - memcached
+    restart: unless-stopped

@@ -1,10 +1,11 @@
 IMAGE := akrishnaams/access-bit-ycsb-memcached:latest
 DOCKERFILE := docker/Dockerfile
+COMPOSE_FILE := docker/docker-compose.yml
 YCSB_CONTAINER := ycsb
 MEMCACHED_CONTAINER := memcached
 CONFIG ?=
 
-.PHONY: build push pull ycsb-run memcached-run
+.PHONY: build push pull compose-up compose-down compose-shell
 
 build:
 	docker build -f $(DOCKERFILE) -t $(IMAGE) .
@@ -16,16 +17,11 @@ pull:
 	docker pull $(IMAGE)
 	docker pull memcached
 
-ycsb-run:
-	@docker rm -f $(YCSB_CONTAINER) 2>/dev/null || true
-	docker run -d --name $(YCSB_CONTAINER) $(IMAGE) sleep infinity
-	$(if $(CONFIG),docker cp $(CONFIG) $(YCSB_CONTAINER):/YCSB/$(notdir $(CONFIG)))
-	docker exec -it $(YCSB_CONTAINER) /bin/bash
+compose-up:
+	docker compose -f $(COMPOSE_FILE) up -d
 
-memcached-run:
-	@if [ -z "$(CONFIG)" ]; then echo "Error: CONFIG is required. Usage: make memcached-run CONFIG=<path>"; exit 1; fi
-	@docker rm -f $(MEMCACHED_CONTAINER) 2>/dev/null || true
-	$(eval MEM     := $(shell python3 -c "import json; d=json.load(open('$(CONFIG)')); print(d['memory'])"))
-	$(eval PORT    := $(shell python3 -c "import json; d=json.load(open('$(CONFIG)')); print(d['port'])"))
-	$(eval THREADS := $(shell python3 -c "import json; d=json.load(open('$(CONFIG)')); print(d['threads'])"))
-	docker run -d --name $(MEMCACHED_CONTAINER) --net host memcached:latest -m $(MEM) -p $(PORT) -t $(THREADS)
+compose-down:
+	docker compose -f $(COMPOSE_FILE) down
+
+compose-shell:
+	docker exec -it $(YCSB_CONTAINER) /bin/bash
