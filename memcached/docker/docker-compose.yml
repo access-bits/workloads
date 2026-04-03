@@ -15,6 +15,7 @@ services:
     cpuset: ${YCSB_CPUS}
     volumes:
       - ${CONFIG_FILE}:/YCSB/ycsb-config.json
+      - ${MEMCACHED_PROPERTIES_FILE}:/YCSB/memcached.properties:ro
     depends_on:
       - memcached
     restart: unless-stopped
