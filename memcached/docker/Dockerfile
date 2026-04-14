@@ -27,4 +27,5 @@ WORKDIR /YCSB
 COPY ./src/ycsb-config.json /YCSB/ycsb-config.json
 COPY ./src/load.sh /YCSB/load.sh
 COPY ./src/run.sh /YCSB/run.sh
+COPY ./src/memcached.properties /YCSB/memcached.properties
 RUN chmod +x /YCSB/load.sh /YCSB/run.sh
