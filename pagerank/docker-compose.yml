@@ -1,0 +1,20 @@
+services:
+  pagerank:
+    build:
+      context: .
+      target: base
+    image: akrishnaams/access-bit-pagerank-gapbs:latest
+    container_name: pagerank
+    network_mode: host
+    # pid: host
+    privileged: true
+    environment:
+      - GRAPH_DIR=/twitter
+      - OUTPUT_DIR=/twitter
+      - OMP_NUM_THREADS=${OMP_NUM_THREADS:-0}
+    volumes:
+      - /mnt/sdb/arun/workloads/gapbs/twitter-dataset:/twitter
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+    cpuset: 0-3
