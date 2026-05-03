@@ -1,0 +1,11 @@
+services:
+  tpch-generate:
+    image: ${IMAGE}
+    container_name: tpch-generate
+    command: /scripts/generate.sh
+    cpuset: ${CPUS}
+    environment:
+      SF: ${SF}
+      TPCH_DATA_DIR: /data
+    volumes:
+      - ${DATA_DIR}:/data

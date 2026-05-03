@@ -1,0 +1,17 @@
+services:
+  tpch:
+    image: ${IMAGE}
+    container_name: tpch
+    command: sleep infinity
+    cpuset: ${CPUS}
+    environment:
+      SF: ${SF}
+      TPCH_QUERY: ${TPCH_QUERY}
+      TPCH_DATA_DIR: /data
+      TPCH_OUTPUT_DIR: /results/output
+      TPCH_EXECUTION_TIMES: /results/execution_times.txt
+      SPARK_DRIVER_MEMORY: ${SPARK_DRIVER_MEMORY}
+      SPARK_SHUFFLE_PARTITIONS: ${SPARK_SHUFFLE_PARTITIONS}
+    volumes:
+      - ${DATA_DIR}:/data:ro
+      - ${RESULTS_DIR}:/results
