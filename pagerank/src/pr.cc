@@ -2,6 +2,8 @@
 // See LICENSE.txt for license details
 
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <vector>
 
@@ -29,6 +31,12 @@ using namespace std;
 
 typedef float ScoreT;
 const float kDamp = 0.85;
+#define PAGE_SIZE 8192  // 4 KB page size * 2 for safety margin
+
+// Magic markers for memory trace instrumentation
+volatile int* iter_start_marker = nullptr;
+volatile int* iter_end_marker = nullptr;
+volatile int* algo_end_marker = nullptr;
 
 
 pvector<ScoreT> PageRankPullGS(const Graph &g, int max_iters, double epsilon=0,
@@ -40,7 +48,13 @@ pvector<ScoreT> PageRankPullGS(const Graph &g, int max_iters, double epsilon=0,
   #pragma omp parallel for
   for (NodeID n=0; n < g.num_nodes(); n++)
     outgoing_contrib[n] = init_score / g.out_degree(n);
+  
+  // Mark initialization complete
+  *iter_start_marker = -1;
+  
   for (int iter=0; iter < max_iters; iter++) {
+    // Mark iteration start
+    *iter_start_marker = iter;
     double error = 0;
     #pragma omp parallel for reduction(+ : error) schedule(dynamic, 16384)
     for (NodeID u=0; u < g.num_nodes(); u++) {
@@ -54,9 +68,17 @@ pvector<ScoreT> PageRankPullGS(const Graph &g, int max_iters, double epsilon=0,
     }
     if (logging_enabled)
       PrintStep(iter, error);
+    
+    // Mark iteration end
+    *iter_end_marker = iter;
+    
     if (error < epsilon)
       break;
   }
+  
+  // Mark algorithm end
+  *algo_end_marker = max_iters;
+  
   return scores;
 }
 
@@ -95,6 +117,22 @@ bool PRVerifier(const Graph &g, const pvector<ScoreT> &scores,
 
 
 int main(int argc, char* argv[]) {
+  // Initialize magic markers for iteration tracking (page-aligned allocations)
+  iter_start_marker = (int*)malloc(PAGE_SIZE);
+  iter_end_marker = (int*)malloc(PAGE_SIZE);
+  algo_end_marker = (int*)malloc(PAGE_SIZE);
+  
+  *iter_start_marker = 0;
+  *iter_end_marker = 0;
+  *algo_end_marker = 0;
+  
+  // Print marker addresses for memory trace analysis
+  printf("Magic Marker Addresses for Memory Trace:\n");
+  printf("  iter_start_marker:  0x%lx\n", (unsigned long)iter_start_marker);
+  printf("  iter_end_marker:    0x%lx\n", (unsigned long)iter_end_marker);
+  printf("  algo_end_marker:    0x%lx\n", (unsigned long)algo_end_marker);
+  printf("\n");
+  
   CLPageRank cli(argc, argv, "pagerank", 1e-4, 20);
   if (!cli.ParseArgs())
     return -1;
@@ -107,5 +145,11 @@ int main(int argc, char* argv[]) {
     return PRVerifier(g, scores, cli.tolerance());
   };
   BenchmarkKernel(cli, g, PRBound, PrintTopScores, VerifierBound);
+  
+  // Cleanup markers
+  free((void*)iter_start_marker);
+  free((void*)iter_end_marker);
+  free((void*)algo_end_marker);
+  
   return 0;
 }

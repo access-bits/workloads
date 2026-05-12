@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SF="${SF:-8}"
-QUERY="${TPCH_QUERY:-}"        # empty = run all 22
+QUERY="${TPCH_QUERY:-}"        # empty = run all 22; space-separated list to run a subset
 DATA_DIR="${TPCH_DATA_DIR:-/data}"
 OUTPUT_DIR="${TPCH_OUTPUT_DIR:-/results/output}"
 TIMES_FILE="${TPCH_EXECUTION_TIMES:-/results/execution_times.txt}"
@@ -29,7 +29,7 @@ echo "[run] SF=$SF  JAR=$JAR"
 echo "[run] Data dir:    $DATA_DIR"
 echo "[run] Output dir:  $OUTPUT_DIR"
 echo "[run] Timings:     $TIMES_FILE"
-[[ -n "$QUERY" ]] && echo "[run] Query: Q$QUERY" || echo "[run] Queries: all 1-22"
+[[ -n "$QUERY" ]] && echo "[run] Queries: $QUERY" || echo "[run] Queries: all 1-22"
 
 spark-submit \
     --master "local[*]" \

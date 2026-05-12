@@ -36,19 +36,11 @@ object TpchQuery {
     }
   }
 
-  def executeQueries(spark: SparkSession, schemaProvider: TpchSchemaProvider, queryNum: Option[Int], queryOutputDir: String): ListBuffer[(String, Float)] = {
-    var queryFrom = 1;
-    var queryTo = 22;
-    queryNum match {
-      case Some(n) => {
-        queryFrom = n
-        queryTo = n
-      }
-      case None => {}
-    }
+  def executeQueries(spark: SparkSession, schemaProvider: TpchSchemaProvider, queryNums: Seq[Int], queryOutputDir: String): ListBuffer[(String, Float)] = {
+    val queries = if (queryNums.isEmpty) 1 to 22 else queryNums
 
     val executionTimes = new ListBuffer[(String, Float)]
-    for (queryNo <- queryFrom to queryTo) {
+    for (queryNo <- queries) {
       val startTime = System.nanoTime()
       val query_name = f"main.scala.Q${queryNo}%02d"
 
@@ -72,18 +64,12 @@ object TpchQuery {
   }
 
   def main(args: Array[String]): Unit = {
-    // parse command line arguments: expecting _at most_ 1 argument denoting which query to run
-    // if no query is given, all queries 1..22 are run.
-    if (args.length > 1)
-      println("Expected at most 1 argument: query to run. No arguments = run all 22 queries.")
-    val queryNum = if (args.length == 1) {
-      try {
-        Some(Integer.parseInt(args(0).trim))
-      } catch {
-        case e: Exception => None
-      }
-    } else
-      None
+    // parse command line arguments: zero or more query numbers to run.
+    // if no query numbers given, all queries 1..22 are run.
+    val queryNums: Seq[Int] = args.flatMap { a =>
+      try { Some(Integer.parseInt(a.trim)) }
+      catch { case _: Exception => None }
+    }.toSeq
 
     // get paths from env variables else use default
     val cwd = System.getProperty("user.dir")
@@ -98,7 +84,7 @@ object TpchQuery {
     val schemaProvider = new TpchSchemaProvider(spark, inputDataDir)
 
     // execute queries
-    val executionTimes = executeQueries(spark, schemaProvider, queryNum, queryOutputDir)
+    val executionTimes = executeQueries(spark, schemaProvider, queryNums, queryOutputDir)
     spark.close()
 
     // write execution times to file

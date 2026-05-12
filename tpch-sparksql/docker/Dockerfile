@@ -16,6 +16,15 @@ RUN curl -fL "https://github.com/sbt/sbt/releases/download/v1.9.9/sbt-1.9.9.tgz"
     | tar xz -C /usr/local && \
     ln -sf /usr/local/sbt/bin/sbt /usr/local/bin/sbt
 
+# ── Download Spark 3.3.0 standalone (for spark-submit) ───────────────────
+RUN wget -q https://archive.apache.org/dist/spark/spark-3.3.0/spark-3.3.0-bin-hadoop3.tgz && \
+    tar xzf spark-3.3.0-bin-hadoop3.tgz -C /opt && \
+    ln -s /opt/spark-3.3.0-bin-hadoop3 /opt/spark && \
+    rm spark-3.3.0-bin-hadoop3.tgz
+
+ENV PATH="/opt/spark/bin:$PATH"
+ENV SPARK_HOME="/opt/spark"
+
 # ── Copy tpch-spark source ────────────────────────────────────────────────
 COPY tpch-spark /tpch-spark
 
@@ -31,15 +40,6 @@ RUN cp makefile.suite makefile && \
 # ── Build tpch-spark jar ─────────────────────────────────────────────────
 WORKDIR /tpch-spark
 RUN sbt -batch package
-
-# ── Download Spark 3.3.0 standalone (for spark-submit) ───────────────────
-RUN wget -q https://archive.apache.org/dist/spark/spark-3.3.0/spark-3.3.0-bin-hadoop3.tgz && \
-    tar xzf spark-3.3.0-bin-hadoop3.tgz -C /opt && \
-    ln -s /opt/spark-3.3.0-bin-hadoop3 /opt/spark && \
-    rm spark-3.3.0-bin-hadoop3.tgz
-
-ENV PATH="/opt/spark/bin:$PATH"
-ENV SPARK_HOME="/opt/spark"
 
 # ── Copy scripts ──────────────────────────────────────────────────────────
 COPY scripts/generate.sh /scripts/generate.sh
